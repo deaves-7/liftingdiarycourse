@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { format } from "date-fns";
+import { useState, useEffect } from "react";
+import { format, parseISO } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { WorkoutWithExercises } from "@/data/workouts";
+
+const STORAGE_KEY = "dashboard-selected-date";
 
 export default function WorkoutCalendar({
   workouts,
@@ -13,6 +15,24 @@ export default function WorkoutCalendar({
   workouts: WorkoutWithExercises[];
 }) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = parseISO(stored);
+      if (!isNaN(parsed.getTime())) {
+        setSelectedDate(parsed);
+        setCalendarMonth(parsed);
+      }
+    }
+  }, []);
+
+  function handleSelect(date: Date) {
+    setSelectedDate(date);
+    setCalendarMonth(date);
+    localStorage.setItem(STORAGE_KEY, format(date, "yyyy-MM-dd"));
+  }
 
   const workoutsForDate = workouts.filter(
     (w) =>
@@ -24,7 +44,9 @@ export default function WorkoutCalendar({
       <Calendar
         mode="single"
         selected={selectedDate}
-        onSelect={(date) => date && setSelectedDate(date)}
+        onSelect={(date) => date && handleSelect(date)}
+        month={calendarMonth}
+        onMonthChange={setCalendarMonth}
         className="rounded-lg border"
       />
 
