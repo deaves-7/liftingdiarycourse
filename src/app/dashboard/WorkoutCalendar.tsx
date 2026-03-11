@@ -77,22 +77,24 @@ export default function WorkoutCalendar({
           </Card>
         ) : (
           workoutsForDate.map((workout) => (
-            <Card key={workout.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">
-                  {workout.name ?? "Untitled Workout"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {workout.exercises.map((exercise) => (
-                    <Badge key={exercise} variant="secondary">
-                      {exercise}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <Link key={workout.id} href={`/dashboard/workout/${workout.id}`}>
+              <Card className="cursor-pointer transition-transform duration-100 active:scale-[0.98] hover:shadow-md">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">
+                    {workout.name ?? "Untitled Workout"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {workout.exercises.map((exercise) => (
+                      <Badge key={exercise} variant="secondary">
+                        {exercise}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))
         )}
       </div>

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { workouts, workoutExercises, exercises } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 
 export async function createWorkout(name: string, startedAt: Date) {
@@ -21,6 +21,28 @@ export type WorkoutWithExercises = {
   startedAt: Date;
   exercises: string[];
 };
+
+export async function getWorkoutById(workoutId: number) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthenticated");
+
+  const [workout] = await db
+    .select()
+    .from(workouts)
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)));
+
+  return workout ?? null;
+}
+
+export async function updateWorkout(workoutId: number, name: string, startedAt: Date) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthenticated");
+
+  await db
+    .update(workouts)
+    .set({ name, startedAt })
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)));
+}
 
 export async function getWorkoutsForCurrentUser(): Promise<WorkoutWithExercises[]> {
   const { userId } = await auth();
