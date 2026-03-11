@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
+import Link from "next/link";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { WorkoutWithExercises } from "@/data/workouts";
 
 const STORAGE_KEY = "dashboard-selected-date";
@@ -51,12 +53,21 @@ export default function WorkoutCalendar({
       />
 
       <div className="space-y-4">
-        <h2 className="text-lg font-medium text-muted-foreground">
-          Workouts for{" "}
-          <span className="text-foreground font-semibold">
-            {format(selectedDate, "do MMM yyyy")}
-          </span>
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium text-muted-foreground">
+            Workouts for{" "}
+            <span className="text-foreground font-semibold">
+              {format(selectedDate, "do MMM yyyy")}
+            </span>
+          </h2>
+          <Button asChild size="sm">
+            <Link
+              href={`/dashboard/workout/new?date=${format(selectedDate, "yyyy-MM-dd")}`}
+            >
+              Log Workout
+            </Link>
+          </Button>
+        </div>
 
         {workoutsForDate.length === 0 ? (
           <Card>
