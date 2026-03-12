@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { Suspense, useTransition } from "react";
 import { createWorkoutAction } from "./actions";
 
-export default function NewWorkoutPage() {
+function NewWorkoutForm() {
   const [isPending, startTransition] = useTransition();
   const searchParams = useSearchParams();
   const defaultDate =
@@ -61,5 +61,13 @@ export default function NewWorkoutPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function NewWorkoutPage() {
+  return (
+    <Suspense>
+      <NewWorkoutForm />
+    </Suspense>
   );
 }
