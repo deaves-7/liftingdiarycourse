@@ -1,7 +1,19 @@
 import { db } from "@/db";
-import { workouts, workoutExercises, exercises } from "@/db/schema";
+import { workouts, workoutExercises, exercises, sets } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
+import type { Exercise, WorkoutExercise, Set, Workout } from "@/db/schema";
+
+export type WorkoutExerciseWithSets = {
+  workoutExercise: WorkoutExercise;
+  exercise: Exercise;
+  sets: Set[];
+};
+
+export type WorkoutWithExercisesAndSets = {
+  workout: Workout;
+  exercises: WorkoutExerciseWithSets[];
+};
 
 export async function createWorkout(name: string, startedAt: Date) {
   const { userId } = await auth();
@@ -42,6 +54,48 @@ export async function updateWorkout(workoutId: number, name: string, startedAt: 
     .update(workouts)
     .set({ name, startedAt })
     .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)));
+}
+
+export async function getWorkoutWithExercisesAndSets(
+  workoutId: number
+): Promise<WorkoutWithExercisesAndSets | null> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthenticated");
+
+  const [workout] = await db
+    .select()
+    .from(workouts)
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)));
+
+  if (!workout) return null;
+
+  const rows = await db
+    .select({
+      workoutExercise: workoutExercises,
+      exercise: exercises,
+      set: sets,
+    })
+    .from(workoutExercises)
+    .innerJoin(exercises, eq(exercises.id, workoutExercises.exerciseId))
+    .leftJoin(sets, eq(sets.workoutExerciseId, workoutExercises.id))
+    .where(eq(workoutExercises.workoutId, workoutId))
+    .orderBy(workoutExercises.order, sets.setNumber);
+
+  const exerciseMap = new Map<number, WorkoutExerciseWithSets>();
+  for (const row of rows) {
+    if (!exerciseMap.has(row.workoutExercise.id)) {
+      exerciseMap.set(row.workoutExercise.id, {
+        workoutExercise: row.workoutExercise,
+        exercise: row.exercise,
+        sets: [],
+      });
+    }
+    if (row.set) {
+      exerciseMap.get(row.workoutExercise.id)!.sets.push(row.set);
+    }
+  }
+
+  return { workout, exercises: Array.from(exerciseMap.values()) };
 }
 
 export async function getWorkoutsForCurrentUser(): Promise<WorkoutWithExercises[]> {

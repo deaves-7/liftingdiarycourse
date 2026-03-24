@@ -1,27 +1,30 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getWorkoutById } from "@/data/workouts";
+import { getWorkoutWithExercisesAndSets } from "@/data/workouts";
+import { getAllExercises } from "@/data/exercises";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import EditWorkoutForm from "./EditWorkoutForm";
+import { format } from "date-fns";
+import WorkoutLogger from "./WorkoutLogger";
 
 type Props = {
   params: Promise<{ workoutId: string }>;
 };
 
-export default async function EditWorkoutPage({ params }: Props) {
+export default async function WorkoutPage({ params }: Props) {
   const { workoutId } = await params;
   const id = parseInt(workoutId, 10);
 
   if (isNaN(id)) notFound();
 
-  const workout = await getWorkoutById(id);
-  if (!workout) notFound();
+  const [data, allExercises] = await Promise.all([
+    getWorkoutWithExercisesAndSets(id),
+    getAllExercises(),
+  ]);
 
-  const defaultDate = workout.startedAt.toISOString().slice(0, 10);
+  if (!data) notFound();
 
   return (
-    <div className="container mx-auto max-w-lg p-6 space-y-4">
+    <div className="container mx-auto max-w-2xl p-6 space-y-4">
       <Link
         href="/dashboard"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -29,18 +32,15 @@ export default async function EditWorkoutPage({ params }: Props) {
         <ChevronLeft className="size-4" />
         Back to Dashboard
       </Link>
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Workout</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EditWorkoutForm
-            workoutId={workout.id}
-            defaultName={workout.name ?? ""}
-            defaultDate={defaultDate}
-          />
-        </CardContent>
-      </Card>
+
+      <div>
+        <h1 className="text-2xl font-bold">{data.workout.name ?? "Workout"}</h1>
+        <p className="text-sm text-muted-foreground">
+          {format(data.workout.startedAt, "do MMM yyyy")}
+        </p>
+      </div>
+
+      <WorkoutLogger data={data} allExercises={allExercises} />
     </div>
   );
 }
