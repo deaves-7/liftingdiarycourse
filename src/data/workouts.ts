@@ -9,7 +9,7 @@ export async function createWorkout(name: string, startedAt: Date) {
 
   const [workout] = await db
     .insert(workouts)
-    .values({ userId, name, startedAt })
+    .values({ userId, name, startedAt, completedAt: startedAt })
     .returning({ id: workouts.id });
 
   return workout;

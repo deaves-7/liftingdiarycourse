@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import Link from "next/link";
+import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { WorkoutWithExercises } from "@/data/workouts";
 
 const STORAGE_KEY = "dashboard-selected-date";
@@ -18,6 +20,7 @@ export default function WorkoutCalendar({
 }) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -42,15 +45,30 @@ export default function WorkoutCalendar({
   );
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-start">
-      <Calendar
-        mode="single"
-        selected={selectedDate}
-        onSelect={(date) => date && handleSelect(date)}
-        month={calendarMonth}
-        onMonthChange={setCalendarMonth}
-        className="rounded-lg border"
-      />
+    <div className="space-y-4">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline">
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {format(selectedDate, "do MMM yyyy")}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => {
+              if (date) {
+                handleSelect(date);
+                setOpen(false);
+              }
+            }}
+            month={calendarMonth}
+            onMonthChange={setCalendarMonth}
+            className="rounded-lg"
+          />
+        </PopoverContent>
+      </Popover>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -101,3 +119,4 @@ export default function WorkoutCalendar({
     </div>
   );
 }
+
